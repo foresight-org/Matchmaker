@@ -27,10 +27,13 @@ export function SigninForm({
   mode,
   next,
   intent = "signin",
+  copy = "default",
 }: {
   mode: DeliveryMode
   next?: string
   intent?: "signin" | "signup" | "browse" | "here"
+  /** Mixer phones ask for the Luma registration address, not a new listing. */
+  copy?: "default" | "luma"
 }) {
   const t = useT()
   const [email, setEmail] = useState("")
@@ -113,21 +116,25 @@ export function SigninForm({
 
   if (status === "done" && result) {
     const titleKey =
-      intent === "here"
-        ? "onsite.here.verify_sent_title"
-        : intent === "signup"
-          ? "register.verify_sent_title"
-          : intent === "browse"
-            ? "signin.browse_sent_title"
-            : "signin.email_sent_title"
+      copy === "luma"
+        ? "onsite.here.luma_sent_title"
+        : intent === "here"
+          ? "onsite.here.verify_sent_title"
+          : intent === "signup"
+            ? "register.verify_sent_title"
+            : intent === "browse"
+              ? "signin.browse_sent_title"
+              : "signin.email_sent_title"
     const bodyKey =
-      intent === "here"
-        ? "onsite.here.verify_sent"
-        : intent === "signup"
-          ? "register.verify_sent"
-          : intent === "browse"
-            ? "signin.browse_sent"
-            : "signin.email_sent"
+      copy === "luma"
+        ? "onsite.here.luma_sent"
+        : intent === "here"
+          ? "onsite.here.verify_sent"
+          : intent === "signup"
+            ? "register.verify_sent"
+            : intent === "browse"
+              ? "signin.browse_sent"
+              : "signin.email_sent"
     return (
       <div className="mt-8 border-2 border-ink bg-paper-shade px-5 py-6">
         <p className="font-listing text-2xl font-bold uppercase tracking-tight">{t(titleKey)}</p>
@@ -149,7 +156,13 @@ export function SigninForm({
           </div>
         )}
         <Field
-          label={t(intent === "signup" ? "register.verify_email_label" : "signin.email_label")}
+          label={t(
+            copy === "luma"
+              ? "onsite.here.luma_email_label"
+              : intent === "signup"
+                ? "register.verify_email_label"
+                : "signin.email_label",
+          )}
           htmlFor="signin-email"
           required
         >
@@ -160,10 +173,15 @@ export function SigninForm({
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@organisation.eu"
+            placeholder={copy === "luma" ? "you@email.com" : "you@organisation.eu"}
           />
         </Field>
-        <Button type="submit" variant="primary" disabled={status === "working"} className="self-start">
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={status === "working"}
+          className={intent === "here" ? "min-h-14 w-full text-base" : "self-start"}
+        >
           {status === "working"
             ? t(
                 intent === "here"
@@ -189,7 +207,7 @@ export function SigninForm({
       </form>
       {/* Only before a link is requested — after "email sent", this CTA restarts
           verification on /register and feels like a loop. */}
-      {intent !== "signup" ? (
+      {intent !== "signup" && copy !== "luma" ? (
         <p className="mt-6 text-sm text-ink-soft">
           {intent === "browse" ? t("signin.no_listing_hint") : t("signin.no_listing_yet")}{" "}
           <a href="/register" className="font-semibold underline underline-offset-2">

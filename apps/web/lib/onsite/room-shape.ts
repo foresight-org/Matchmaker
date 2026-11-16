@@ -18,6 +18,8 @@ export function roomShape(count: number): { cols: number; rows: number } {
     if (count <= 2) return { cols: count, rows: 1 }
     return { cols: 2, rows: 2 }
   }
-  const cols = count <= 9 ? 3 : count <= 16 ? 4 : count <= 25 ? 5 : 6
+  // Eight is the ceiling. A ninth column turns a surname into a stack of
+  // letters on the HDMI wall, which is worse than one extra row.
+  const cols = count <= 9 ? 3 : count <= 16 ? 4 : count <= 25 ? 5 : count <= 36 ? 6 : 8
   return { cols, rows: Math.ceil(count / cols) }
 }

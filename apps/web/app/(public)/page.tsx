@@ -4,10 +4,9 @@ import { peekLiveSession } from "@/lib/auth/live-session"
 import { getSession } from "@/lib/auth/session"
 import { signInHref } from "@/lib/auth/next-path"
 import { browseDirectoryPath, registerableChallengeIdOf, requestDemoUnlock, visibleChallenges } from "@/lib/challenges/visibility"
-import { acceptsNewListings, isApplicationChallenge } from "@/lib/challenges/catalog"
+import { acceptsNewListings, byDesk, isApplicationChallenge } from "@/lib/challenges/catalog"
 import { challengeTheme } from "@/lib/challenges/themes"
 import { ProgrammeStatusTag } from "@/components/programme-status"
-import { DirectoryDisclaimer } from "@/components/directory-disclaimer"
 import { kindCountTotal } from "@/components/listing-counts"
 import { hydrateListings } from "@/lib/db/durable"
 import { countVisibleProfilesByChallenge } from "@/lib/db/profiles"
@@ -29,7 +28,7 @@ export default async function LandingPage({
   await corpus
 
   const unlock = await requestDemoUnlock()
-  const programmes = visibleChallenges(unlock)
+  const programmes = [...visibleChallenges(unlock)].sort(byDesk)
   const openId = registerableChallengeIdOf(null, unlock)
   const byChallenge = countVisibleProfilesByChallenge()
   const empty = { data_holder: 0, ai_team: 0, consortium: 0, individual: 0 }
@@ -58,8 +57,6 @@ export default async function LandingPage({
         {t("landing.headline")}
       </h1>
       <p className="mt-4 max-w-2xl text-lg leading-relaxed">{t("landing.subhead")}</p>
-
-      <DirectoryDisclaimer tone="quiet" className="mt-5" />
 
       {!openId ? (
         <p className="mt-5 max-w-2xl border border-rule-strong bg-paper-shade px-4 py-3 text-sm leading-relaxed text-ink-soft">
@@ -111,7 +108,7 @@ export default async function LandingPage({
                           ? t("landing.programme_deadline", { date: challenge.deadlineLabel })
                           : t(`challenge.${challenge.id}.cadence`)}
                     </p>
-                    {kindCountTotal(counts) > 0 ? (
+                    {open && kindCountTotal(counts) > 0 ? (
                       <dl className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink-soft">
                         {isApplicationChallenge(challenge.id) ? (
                           <>

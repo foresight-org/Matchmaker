@@ -25,7 +25,9 @@ export function buildOnsiteFeed(
     }
   }
   const checkIns = checkInsForCity(events, city)
-  const people = presentCards(profiles, checkIns, t)
+  // Berkeley is the mixer. An older programme listing must not appear on that wall.
+  const roster = city === "berkeley" ? profiles.filter((profile) => profile.challenge_id === "vision_mixer") : profiles
+  const people = presentCards(roster, checkIns, t)
   return {
     city,
     city_label: t(`onsite.city.${city}`),

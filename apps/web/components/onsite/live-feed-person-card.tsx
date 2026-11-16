@@ -1,6 +1,6 @@
 import { FittedName } from "@/components/onsite/fitted-name"
 import { TileProfileQr } from "@/components/onsite/tile-profile-qr"
-import { KIND_SKIN } from "@/lib/onsite/kind-skin"
+import { boardSurface, roleInk } from "@/lib/onsite/track-skin"
 import { pairNameMaxPx, tileNameMaxPx } from "@/lib/onsite/name-fit"
 import type { OnsiteFeed } from "@/lib/onsite/types"
 
@@ -25,15 +25,20 @@ export function LiveFeedPersonCard({
   one_liner,
   looking_for,
   kind,
+  track,
+  capital,
   tone,
   lookingForLabel,
   profileOrigin,
   profileQrLabel,
+  nameLine = "wrap",
 }: Card & {
   tone: Tone
   lookingForLabel?: string
   profileOrigin?: string
   profileQrLabel?: string
+  /** Packed walls keep one readable line. Pair posters still wrap the full name. */
+  nameLine?: "wrap" | "single"
 }) {
   const showSeeking = Boolean(lookingForLabel) && looking_for.length > 0
   const seekingMax = tone === "tile" ? 1 : looking_for.length
@@ -44,26 +49,31 @@ export function LiveFeedPersonCard({
   if (tone === "tile") {
     return (
       <article
-        className={`relative box-border grid h-full min-h-0 min-w-0 grid-rows-[auto_1fr_auto] overflow-hidden border-2 border-ink ${KIND_SKIN[kind]} border-l-4 px-3 py-2 ${showQr ? "pr-10" : ""}`}
+        className={`relative box-border grid h-full min-h-0 min-w-0 overflow-hidden border-2 ${capital === undefined ? "border-ink border-l-4" : ""} ${boardSurface({ kind, track, capital })} ${
+          nameLine === "single"
+            ? "grid-rows-[auto_minmax(0,1fr)] px-2 py-1"
+            : `grid-rows-[auto_1fr_auto] px-3 py-2 ${showQr ? "pr-20" : ""}`
+        }`}
       >
         {showQr ? (
           <div className="absolute right-1 top-1 z-10">
             <TileProfileQr origin={profileOrigin!} slug={slug} tone="tile" label={profileQrLabel!} />
           </div>
         ) : null}
-        <p className="shrink-0 pr-1 text-[9px] font-semibold uppercase leading-tight tracking-[0.12em] text-teal-deep">
-          {kind_label}
+        <p className="shrink-0 truncate pr-1 text-[9px] font-semibold uppercase leading-tight tracking-[0.12em]">
+          <span className={roleInk(capital)}>{kind_label}</span>
         </p>
         <FittedName
           name={org_name}
-          maxPx={tileNameMaxPx(org_name, { withFooter: showSeeking })}
-          minPx={6.5}
+          lines={nameLine}
+          maxPx={nameLine === "single" ? 15 : tileNameMaxPx(org_name, { withFooter: showSeeking })}
+          minPx={nameLine === "single" ? 11 : 6.5}
         />
         {seekingLine ? (
           <p className="mt-1 shrink-0 break-words text-[8px] font-semibold uppercase leading-[1.2] tracking-wide text-ink-soft [overflow-wrap:anywhere]">
             {seekingLine}
           </p>
-        ) : (
+        ) : nameLine === "single" ? null : (
           <span aria-hidden="true" />
         )}
       </article>
@@ -72,19 +82,19 @@ export function LiveFeedPersonCard({
 
   return (
     <article
-      className={`relative box-border grid h-full min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)_auto_auto] overflow-hidden border-2 border-ink ${KIND_SKIN[kind]} border-l-8 px-5 py-4 ${showQr ? "pr-14" : ""}`}
+      className={`relative box-border grid h-full min-h-0 min-w-0 grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden border-2 ${capital === undefined ? "border-ink border-l-8" : ""} ${boardSurface({ kind, track, capital })} px-4 py-3 ${showQr ? "pr-32" : ""}`}
     >
       {showQr ? (
         <div className="absolute right-3 top-3 z-10">
           <TileProfileQr origin={profileOrigin!} slug={slug} tone={tone} label={profileQrLabel!} />
         </div>
       ) : null}
-      <p className="shrink-0 text-[10px] font-semibold uppercase leading-tight tracking-[0.14em] text-teal-deep">
-        {kind_label}
+      <p className="shrink-0 truncate text-[10px] font-semibold uppercase leading-tight tracking-[0.14em]">
+        <span className={roleInk(capital)}>{kind_label}</span>
       </p>
-      <FittedName name={org_name} maxPx={pairNameMaxPx(org_name)} minPx={14} />
+      <FittedName name={org_name} maxPx={Math.min(pairNameMaxPx(org_name), 26)} minPx={16} fill={false} />
       {blurb ? (
-        <p className="mt-2 min-h-0 shrink-0 break-words leading-snug text-ink-soft [overflow-wrap:anywhere] line-clamp-2 text-sm">
+        <p className="mt-2 line-clamp-6 min-h-0 overflow-hidden break-words text-[15px] leading-snug text-ink-soft [overflow-wrap:anywhere]">
           {blurb}
         </p>
       ) : (

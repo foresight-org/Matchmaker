@@ -27,6 +27,11 @@ export interface ChallengeDef {
   id: ChallengeId
   slug: string
   status: ChallengeStatus
+  /**
+   * Unlisted programmes stay in the catalog so old links and mail still
+   * resolve, but they are not shown on the desk, the footer, or by URL.
+   */
+  listed?: boolean
   host: string
   hostUrl: string
   hostEmail: string
@@ -107,6 +112,7 @@ export const CHALLENGES: readonly ChallengeDef[] = [
     id: "ai_safety_berlin",
     slug: "ai-safety-berlin",
     status: "preview",
+    listed: false,
     host: "AI Safety Berlin",
     hostUrl: "https://aisafety.berlin",
     hostEmail: "info@aisafety.berlin",
@@ -116,6 +122,26 @@ export const CHALLENGES: readonly ChallengeDef[] = [
     factsNamespace: "challenge.ai_safety_berlin",
     factKeys: ["cadence", "venue", "format", "cost", "who"],
     sessions: ["asb_coworking", "asb_lunch", "asb_talks"],
+  },
+  {
+    /**
+     * Founder & Funder mixer — Sunday close of Vision Weekend USA 2026.
+     * Open for the day of the room: phones sign in with the Luma email and
+     * the Berkeley board is the public desk. autoNudge stays off — the
+     * roster is already in the room, and we do not drip them.
+     */
+    id: "vision_mixer",
+    slug: "founder-funder",
+    status: "open",
+    host: "Foresight Institute",
+    hostUrl: "https://foresight.org/founder-funder-mixer-vw-2026/",
+    hostEmail: "partnerships@foresight.org",
+    autoNudge: false,
+    calendarUrl: "https://luma.com/foresight-vq9z",
+    factsNamespace: "challenge.vision_mixer",
+    factKeys: ["when", "where", "who", "areas"],
+    sessions: ["vw_mixer"],
+    sessionUrls: { vw_mixer: "https://luma.com/foresight-vq9z" },
   },
 ]
 
@@ -151,9 +177,24 @@ export function acceptsNewListings(id: ChallengeId): boolean {
   return challengeById(id).status === "open"
 }
 
+/**
+ * Closed programmes stay as a page you can open. Their listings do not.
+ * The person who owns a closed listing can still open their own profile.
+ */
+export function listingOnDisplay(challengeId: string | null | undefined, viewerOwns = false): boolean {
+  if (challengeById(challengeId).status !== "closed") return true
+  return viewerOwns
+}
+
 /** Programmes that currently accept new listings, in catalog order. */
 export function openChallenges(): readonly ChallengeDef[] {
   return CHALLENGES.filter((c) => c.status === "open")
+}
+
+/** Open programmes first, then closed archives, then previews. */
+export function byDesk(a: { status: ChallengeStatus }, b: { status: ChallengeStatus }): number {
+  const rank = (status: ChallengeStatus) => (status === "open" ? 0 : status === "closed" ? 1 : 2)
+  return rank(a.status) - rank(b.status)
 }
 
 /** True unless the catalogue opts a programme out of the week-later drip. */

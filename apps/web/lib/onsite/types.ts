@@ -1,3 +1,4 @@
+import type { MixerTrack } from "@rmm/matching"
 import type { Kind } from "@rmm/schema"
 import type { OnsiteCitySlug } from "./cities"
 
@@ -8,6 +9,12 @@ export interface OnsiteCard {
   org_name: string
   kind: Kind
   kind_label: string
+  /** Foresight track, when the mixer thesis named one. Absent on other programmes. */
+  track?: MixerTrack | null
+  /** Gold edge: they write a cheque. Absent on other programmes. */
+  capital?: boolean
+  /** Short firm or project line. The mixer wall shows this under the name. */
+  detail?: string
   one_liner: string
   looking_for: string[]
   arrived_at: string

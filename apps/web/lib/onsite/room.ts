@@ -34,7 +34,7 @@ export interface RoomShortlistEntry {
  */
 export function matchReasons(factors: readonly Factor[], t: T): string[] {
   return factors
-    .filter((factor) => factor.weight > 0 && factor.earned > 0)
+    .filter((factor) => factor.weight > 0 && factor.earned > 0 && factor.key !== "mixer_collab_fit")
     .map((factor) => ({ key: factor.key, ratio: factor.earned / factor.weight }))
     .sort((a, b) => b.ratio - a.ratio)
     .slice(0, REASON_COUNT)
@@ -66,7 +66,8 @@ export function buildOnsiteRoom({
   shortlist: readonly RoomShortlistEntry[]
   t: T
 }): OnsiteRoom {
-  const byId = new Map(profiles.map((profile) => [profile.id, profile]))
+  const roster = city === "berkeley" ? profiles.filter((profile) => profile.challenge_id === "vision_mixer") : profiles
+  const byId = new Map(roster.map((profile) => [profile.id, profile]))
 
   // Hidden listings record presence so staff can see arrivals, but they are
   // not on the wall and must not appear on a peer's phone either.

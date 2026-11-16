@@ -3,6 +3,7 @@ import { orientPairing, orientPeoplePairing } from "./pairing"
 import { computeBlockers, computePeopleBlockers, hasHardBlocker } from "./blockers"
 import { computeFactors, computePeopleFactors, sumFactors } from "./factors"
 import { consortiumIsSeeking } from "./helpers"
+import { isVisionMixer, scoreMixer } from "./mixer"
 
 /**
  * Score an ordered pair of profiles. `a` is the viewer, `b` the candidate.
@@ -10,18 +11,22 @@ import { consortiumIsSeeking } from "./helpers"
  * listing can still rank visible peers.
  *
  * Pipeline:
- *   1. If either side is an individual, score a person↔team pairing
+ *   1. Founder & Funder mixer listings score on role, focus, stage, and
+ *      whether they asked to meet someone. They never enter the medical path.
+ *   2. If either side is an individual, score a person↔team pairing
  *      (AI team or seeking consortium). Data holders are excluded.
- *   2. Otherwise orient data side + AI side. If no valid orientation
+ *   3. Otherwise orient data side + AI side. If no valid orientation
  *      exists, the pairing is structurally impossible.
- *   3. Collect blockers. Any HARD blocker forces score 0 (but every blocker,
+ *   4. Collect blockers. Any HARD blocker forces score 0 (but every blocker,
  *      hard and soft, is still returned so the friction is visible).
- *   4. Otherwise sum the weighted soft factors into a 0–100 score.
+ *   5. Otherwise sum the weighted soft factors into a 0–100 score.
  *
  * The function is pure and deterministic — identical inputs always produce an
  * identical result, which the test-suite relies on.
  */
 export function score(a: Profile, b: Profile): ScoreResult {
+  if (isVisionMixer(a) || isVisionMixer(b)) return scoreMixer(a, b)
+
   if (a.kind === "individual" || b.kind === "individual") {
     const people = orientPeoplePairing(a, b)
     const blockers = computePeopleBlockers(a, b, people)

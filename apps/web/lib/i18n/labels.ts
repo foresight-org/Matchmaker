@@ -25,3 +25,26 @@ export function enumLabel(t: TranslateFn, group: string, value: string): string 
   const translated = t(key)
   return translated === key ? humanise(value) : translated
 }
+
+/**
+ * Kind chips on a programme that borrowed a stored kind for a room colour.
+ * The mixer stores capital as `ai_team` so the wall can tell the two sides
+ * apart; the word a guest should read is Funder.
+ */
+export function programmeKindLabel(
+  t: TranslateFn,
+  challengeId: string,
+  kind: string,
+  orgType?: string,
+  mixerRole?: string,
+): string {
+  if (challengeId === "vision_mixer") {
+    if (mixerRole === "founder" || mixerRole === "funder" || mixerRole === "both" || mixerRole === "guest") {
+      return t(`enum.mixer_role.${mixerRole}`)
+    }
+    if (kind === "ai_team") return t("enum.mixer_role.funder")
+    if (orgType === "individual") return t("enum.mixer_role.guest")
+    return t("enum.mixer_role.founder")
+  }
+  return enumLabel(t, "kind", kind)
+}

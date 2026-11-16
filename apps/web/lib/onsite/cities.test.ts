@@ -21,4 +21,11 @@ describe("onsite cities", () => {
     expect(liveFeedCity(new Date("2026-09-17T10:00:00+02:00"))).toBe("stockholm")
     expect(liveFeedCity(new Date("2026-10-01T10:00:00+02:00"))).toBe("stockholm")
   })
+
+  it("opens Berkeley for the Sunday mixer in Pacific time", () => {
+    expect(isOnsiteCitySlug("berkeley")).toBe(true)
+    expect(onsiteCity("berkeley")?.challengeId).toBe("vision_mixer")
+    expect(liveFeedCity(new Date("2026-11-15T16:00:00-08:00"))).toBe("berkeley")
+    expect(liveFeedCity(new Date("2026-11-13T16:00:00-08:00"))).toBe("stockholm")
+  })
 })

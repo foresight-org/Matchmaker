@@ -3,7 +3,7 @@ import { apiFetch, redirectOnAuthFailure } from "@/lib/api/server-fetch"
 import type { DirectoryPayload, PublicDataset } from "@/lib/api/types"
 import { getSession } from "@/lib/auth/session"
 import { getT } from "@/lib/i18n/server"
-import { enumLabel } from "@/lib/i18n/labels"
+import { enumLabel, programmeKindLabel } from "@/lib/i18n/labels"
 import { Tag } from "@/components/ui/primitives"
 import { ProfileContact } from "@/components/profile-contact"
 import type { T } from "@/lib/i18n"
@@ -22,6 +22,15 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
       <dd className="tnum text-base">{children}</dd>
     </div>
   )
+}
+
+/** The one-liner already carries a clipped thesis. Skip the paragraph when it repeats that line. */
+function summaryAdds(line: string, summary: string): boolean {
+  const clipped = line.trim().replace(/…$/, "").trim()
+  const full = summary.trim()
+  if (!full || full === line.trim()) return false
+  if (clipped && full.startsWith(clipped)) return false
+  return true
 }
 
 function joinEnum(t: T, group: string, values: readonly string[] | undefined, other?: string): string {
@@ -76,21 +85,24 @@ export default async function ProfilePage({ params }: Params) {
   if (!profile) notFound()
 
   const isOwn = session?.profileId === profile.id
+  const mixer = challengeIdOf(profile.challenge_id) === "vision_mixer"
 
   return (
     <article className="max-w-3xl py-6">
       <header className="border-b-2 border-rule-strong pb-4">
         <div className="flex flex-wrap items-center gap-2">
-          <Tag>{enumLabel(t, "kind", profile.kind)}</Tag>
+          <Tag>{programmeKindLabel(t, challengeIdOf(profile.challenge_id), profile.kind, profile.org_type, profile.mixer_role)}</Tag>
           <Tag>
             <a href={`/challenges/${challengeById(profile.challenge_id).slug}`} className="hover:underline">
               {enumLabel(t, "challenge", challengeIdOf(profile.challenge_id))}
             </a>
           </Tag>
-          <span className="text-sm text-ink-soft">
-            {profile.country} ·{" "}
-            {[enumLabel(t, "org_type", profile.org_type), profile.org_type_other].filter(Boolean).join(" — ")}
-          </span>
+          {mixer ? null : (
+            <span className="text-sm text-ink-soft">
+              {profile.country} ·{" "}
+              {[enumLabel(t, "org_type", profile.org_type), profile.org_type_other].filter(Boolean).join(" — ")}
+            </span>
+          )}
         </div>
         <h1 className="mt-2 font-listing text-3xl font-bold uppercase leading-tight tracking-tight sm:text-4xl">
           {profile.org_name}
@@ -98,7 +110,9 @@ export default async function ProfilePage({ params }: Params) {
         <p className="mt-2 text-lg">{profile.one_liner}</p>
       </header>
 
-      <p className="mt-4 leading-relaxed">{profile.summary}</p>
+      {summaryAdds(profile.one_liner, profile.summary) ? (
+        <p className="mt-4 leading-relaxed">{profile.summary}</p>
+      ) : null}
 
       <dl className="mt-6">
         {profile.website && (
@@ -115,18 +129,22 @@ export default async function ProfilePage({ params }: Params) {
             </a>
           </Row>
         )}
-        <Row label={t("field.languages")}>{joinEnum(t, "language", profile.languages)}</Row>
-        <Row label={t("field.looking_for")}>
-          {[joinEnum(t, "looking_for", profile.looking_for), profile.looking_for_other].filter(Boolean).join(" — ")}
-        </Row>
-        <Row label={t("field.application_status")}>
-          {enumLabel(t, "application_status", profile.application_status)}
-        </Row>
-        <Row label={t("field.attending")}>{joinEnum(t, "attending", profile.attending)}</Row>
+        {mixer ? null : <Row label={t("field.languages")}>{joinEnum(t, "language", profile.languages)}</Row>}
+        {mixer ? null : (
+          <Row label={t("field.looking_for")}>
+            {[joinEnum(t, "looking_for", profile.looking_for), profile.looking_for_other].filter(Boolean).join(" — ")}
+          </Row>
+        )}
+        {mixer ? null : (
+          <Row label={t("field.application_status")}>
+            {enumLabel(t, "application_status", profile.application_status)}
+          </Row>
+        )}
+        {mixer ? null : <Row label={t("field.attending")}>{joinEnum(t, "attending", profile.attending)}</Row>}
       </dl>
 
       {/* AI capability block (ai_team and consortium). */}
-      {profile.methods && (
+      {profile.methods && profile.methods.length > 0 && !mixer && (
         <section aria-labelledby="ai-fields" className="mt-8">
           <h2 id="ai-fields" className="border-b-2 border-rule-strong pb-1 font-listing text-xl font-bold uppercase">
             {t("profile.ai_section")}
@@ -214,7 +232,7 @@ export default async function ProfilePage({ params }: Params) {
         </section>
       )}
 
-      {profile.still_seeking && profile.still_seeking.length > 0 && (
+      {!mixer && profile.still_seeking && profile.still_seeking.length > 0 && (
         <p className="mt-6 border border-ink px-3 py-2">
           <strong className="uppercase">{t("profile.still_seeking")}: </strong>
           {joinEnum(t, "looking_for", profile.still_seeking)}

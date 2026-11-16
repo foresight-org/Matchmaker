@@ -4,7 +4,7 @@ import { getT } from "@/lib/i18n/server"
 import { getSession } from "@/lib/auth/session"
 import { peekLiveSession } from "@/lib/auth/live-session"
 import { signInHref } from "@/lib/auth/next-path"
-import { directoryHref, isApplicationChallenge } from "@/lib/challenges/catalog"
+import { directoryHref, isApplicationChallenge, listingOnDisplay } from "@/lib/challenges/catalog"
 import { browseDirectoryPath, requestDemoUnlock, visibleChallenges } from "@/lib/challenges/visibility"
 import { challengeTheme } from "@/lib/challenges/themes"
 import { ProgrammePreviewNotice, ProgrammeStatusTag } from "@/components/programme-status"
@@ -56,7 +56,11 @@ export default async function DirectoryPage({
             return (
               <li key={challenge.id}>
                 <Link
-                  href={`/api/v1/desk?challenge=${challenge.id}&next=${encodeURIComponent(directoryHref(challenge.id))}`}
+                  href={
+                    challenge.status === "closed"
+                      ? `/challenges/${challenge.slug}`
+                      : `/api/v1/desk?challenge=${challenge.id}&next=${encodeURIComponent(directoryHref(challenge.id))}`
+                  }
                   className="block border-2 border-rule-strong bg-paper p-5 hover:bg-paper-shade"
                   style={{ borderLeftWidth: "4px", borderLeftColor: challengeTheme(challenge.id).accent }}
                 >
@@ -65,13 +69,13 @@ export default async function DirectoryPage({
                     <ProgrammeStatusTag challenge={challenge} t={t} />
                   </h2>
                   <p className="mt-2 max-w-xl text-ink-soft">{t(`challenge.${challenge.id}.blurb`)}</p>
-                  {kindCountTotal(counts) > 0 ? (
+                  {challenge.status !== "closed" && kindCountTotal(counts) > 0 ? (
                     <p className="mt-3 tnum text-sm text-ink-soft">
                       {kindCountTotal(counts)} {t("directory.title").toLowerCase()}
                     </p>
                   ) : null}
                   <p className="mt-4 text-sm font-semibold uppercase tracking-wide underline underline-offset-2">
-                    {t("directory.choose_open")} →
+                    {challenge.status === "closed" ? t("challenge.closed_tag") : t("directory.choose_open")} →
                   </p>
                 </Link>
               </li>
@@ -83,6 +87,22 @@ export default async function DirectoryPage({
   }
 
   const { t } = await getT()
+
+  if (!listingOnDisplay(selected.id)) {
+    return (
+      <div className="py-6">
+        <ProgrammePreviewNotice challenge={selected} t={t} className="mb-6" />
+        <p className="font-listing text-sm font-bold uppercase tracking-widest text-teal">
+          {t(`challenge.${selected.id}.kicker`)}
+        </p>
+        <h1 className="mt-2 font-listing text-3xl font-bold uppercase tracking-tight">
+          {t(`challenge.${selected.id}.name`)}
+        </h1>
+        <p className="mt-4 max-w-xl text-ink-soft">{t(`challenge.${selected.id}.intro`)}</p>
+      </div>
+    )
+  }
+
   // A directory belongs to exactly one programme. Scoping here rather than in
   // the browser means another programme's listings never reach the client,
   // whatever the query string says.

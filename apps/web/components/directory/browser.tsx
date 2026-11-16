@@ -14,7 +14,7 @@ import {
 } from "@rmm/schema"
 import type { DirectoryProfile } from "@/lib/api/types"
 import { useT } from "@/lib/i18n/client"
-import { enumLabel } from "@/lib/i18n/labels"
+import { enumLabel, programmeKindLabel } from "@/lib/i18n/labels"
 import { Chip, Input, Select, Tag, chipClassName } from "@/components/ui/primitives"
 import { directoryHref, isApplicationChallenge } from "@/lib/challenges/catalog"
 
@@ -169,7 +169,7 @@ export function DirectoryBrowser({
           </Chip>
           {kindOptions.map((kind) => (
             <Chip key={kind} active={filters.kind === kind} onClick={() => setFilter("kind", filters.kind === kind ? "" : kind)}>
-              {enumLabel(t, "kind", kind)} ({profiles.filter((p) => p.kind === kind).length})
+              {programmeKindLabel(t, challengeId, kind)} ({profiles.filter((p) => p.kind === kind).length})
             </Chip>
           ))}
         </div>
@@ -210,14 +210,16 @@ export function DirectoryBrowser({
             </Select>
           </>
         ) : null}
-        <Select aria-label={t("directory.country_filter")} value={filters.country} onChange={(e) => setFilter("country", e.target.value)}>
-          <option value="">{t("directory.any_country")}</option>
-          {countries.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </Select>
+        {challengeId === "vision_mixer" ? null : (
+          <Select aria-label={t("directory.country_filter")} value={filters.country} onChange={(e) => setFilter("country", e.target.value)}>
+            <option value="">{t("directory.any_country")}</option>
+            {countries.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </Select>
+        )}
       </div>
 
       <p className="tnum border-b border-rule pb-2 text-sm text-ink-soft" role="status">
@@ -267,17 +269,25 @@ export function DirectoryBrowser({
                           <span className="font-listing text-base font-bold uppercase leading-tight">
                             {p.org_name}
                           </span>
-                          <span className="ml-2 whitespace-nowrap text-sm text-ink-soft">{p.country}</span>
-                          {medicineFilters ? (
+                          {challengeId === "vision_mixer" ? null : (
+                            <span className="ml-2 whitespace-nowrap text-sm text-ink-soft">{p.country}</span>
+                          )}
+                          {challengeId === "vision_mixer" ? (
+                            <Tag className="ml-2 align-middle">
+                              {programmeKindLabel(t, challengeId, p.kind, p.org_type, p.mixer_role)}
+                            </Tag>
+                          ) : medicineFilters ? (
                             <Tag className="ml-2 align-middle">{enumLabel(t, "kind", p.kind)}</Tag>
                           ) : p.looking_for?.[0] ? (
                             <Tag className="ml-2 align-middle">{enumLabel(t, "looking_for", p.looking_for[0])}</Tag>
                           ) : null}
                           <span className="mt-0.5 block truncate text-sm text-ink-soft">{p.one_liner}</span>
                         </span>
-                        <span className="tnum whitespace-nowrap text-right font-listing text-sm">
-                          {rowFigure(p, t)}
-                        </span>
+                        {challengeId === "vision_mixer" ? null : (
+                          <span className="tnum whitespace-nowrap text-right font-listing text-sm">
+                            {rowFigure(p, t)}
+                          </span>
+                        )}
                       </Link>
                     </li>
                   ))}

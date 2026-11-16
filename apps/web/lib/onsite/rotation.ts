@@ -8,7 +8,7 @@
  */
 
 /** How long one pair holds the spotlight. Long enough to walk over and read it. */
-export const SPOTLIGHT_MS = 40_000
+export const SPOTLIGHT_MS = 30_000
 
 export function msUntilNextSpotlight(nowMs: number = Date.now()): number {
   return SPOTLIGHT_MS - (nowMs % SPOTLIGHT_MS)

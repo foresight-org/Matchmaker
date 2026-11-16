@@ -6,6 +6,7 @@ import { signInHref } from "@/lib/auth/next-path"
 import { getT } from "@/lib/i18n/server"
 import {
   acceptsNewListings,
+  byDesk,
   challengeIdOf,
   directoryHref,
   type ChallengeId,
@@ -37,7 +38,7 @@ export default async function ProgrammesPage() {
     peekLiveSession(),
     requestDeskPreference(),
   ])
-  const programmes = visibleChallenges(unlock)
+  const programmes = [...visibleChallenges(unlock)].sort(byDesk)
   const listings = getProfilesByEmail(session.email)
   const listingByChallenge = new Map<ChallengeId, Profile>(
     listings.map((p) => [challengeIdOf(p.challenge_id), p]),

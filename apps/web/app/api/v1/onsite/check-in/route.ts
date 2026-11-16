@@ -3,9 +3,10 @@ import { ZodError } from "zod"
 import { onsiteCheckInSchema } from "@/lib/api/input"
 import { ok, zodError, badRequest, unauthorized } from "@/lib/api/respond"
 import { resolveLiveSession } from "@/lib/auth/live-session"
-import { getSession } from "@/lib/auth/session"
+import { createSession, getSession } from "@/lib/auth/session"
 import { hydrateEvents, hydrateListings } from "@/lib/db/durable"
 import { flushEvent, listEvents, logEvent } from "@/lib/db/events"
+import { getProfilesByEmail } from "@/lib/db/profiles"
 import { isCheckedIn } from "@/lib/onsite/presence"
 
 export const dynamic = "force-dynamic"
@@ -39,17 +40,31 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   await Promise.all([hydrateListings(), hydrateEvents()])
-  if (isCheckedIn(listEvents(), input.city, live.profile.id)) {
-    return ok({ recorded: false, already: true, hidden: live.profile.visibility === "hidden" })
+
+  // The mixer wall is only Founder & Funder Mixer listings. An older
+  // programme on the same email must not be checked into Berkeley.
+  let profile = live.profile
+  if (input.city === "berkeley") {
+    const mixer = getProfilesByEmail(live.session.email).find((row) => row.challenge_id === "vision_mixer")
+    if (!mixer) return badRequest("Add a Founder & Funder Mixer profile before checking in.")
+    profile = mixer
   }
 
-  const event = logEvent("onsite_checkin", live.profile.id, {
+  if (isCheckedIn(listEvents(), input.city, profile.id)) {
+    const res = ok({ recorded: false, already: true, hidden: profile.visibility === "hidden" })
+    if (live.session.profileId !== profile.id) await createSession(profile.id, live.session.email, res.cookies)
+    return res
+  }
+
+  const event = logEvent("onsite_checkin", profile.id, {
     city: input.city,
-    attending: live.profile.attending,
+    attending: profile.attending,
   })
   await flushEvent(event)
-  return ok(
-    { recorded: true, already: false, hidden: live.profile.visibility === "hidden" },
+  const res = ok(
+    { recorded: true, already: false, hidden: profile.visibility === "hidden" },
     { status: 201 },
   )
+  if (live.session.profileId !== profile.id) await createSession(profile.id, live.session.email, res.cookies)
+  return res
 }

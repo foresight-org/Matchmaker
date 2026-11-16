@@ -23,7 +23,8 @@
               "type": "string",
               "enum": [
                 "recoding_medicine",
-                "ai_safety_berlin"
+                "ai_safety_berlin",
+                "vision_mixer"
               ],
               "default": "recoding_medicine"
             },
@@ -160,6 +161,7 @@
                   "asb_coworking",
                   "asb_lunch",
                   "asb_talks",
+                  "vw_mixer",
                   "remote_only"
                 ]
               },
@@ -498,7 +500,8 @@
               "type": "string",
               "enum": [
                 "recoding_medicine",
-                "ai_safety_berlin"
+                "ai_safety_berlin",
+                "vision_mixer"
               ],
               "default": "recoding_medicine"
             },
@@ -635,6 +638,7 @@
                   "asb_coworking",
                   "asb_lunch",
                   "asb_talks",
+                  "vw_mixer",
                   "remote_only"
                 ]
               },
@@ -1009,7 +1013,8 @@
               "type": "string",
               "enum": [
                 "recoding_medicine",
-                "ai_safety_berlin"
+                "ai_safety_berlin",
+                "vision_mixer"
               ],
               "default": "recoding_medicine"
             },
@@ -1146,6 +1151,7 @@
                   "asb_coworking",
                   "asb_lunch",
                   "asb_talks",
+                  "vw_mixer",
                   "remote_only"
                 ]
               },
@@ -1776,7 +1782,8 @@
               "type": "string",
               "enum": [
                 "recoding_medicine",
-                "ai_safety_berlin"
+                "ai_safety_berlin",
+                "vision_mixer"
               ],
               "default": "recoding_medicine"
             },
@@ -1913,6 +1920,7 @@
                   "asb_coworking",
                   "asb_lunch",
                   "asb_talks",
+                  "vw_mixer",
                   "remote_only"
                 ]
               },

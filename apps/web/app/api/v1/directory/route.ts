@@ -3,6 +3,7 @@ import { listDirectoryProfiles } from "@/lib/db/profiles"
 import { hydrateListings } from "@/lib/db/durable"
 import { getSession } from "@/lib/auth/session"
 import { unauthorized } from "@/lib/api/respond"
+import { listingOnDisplay } from "@/lib/challenges/catalog"
 
 /**
  * GET /api/v1/directory — members-only listings, redacted.
@@ -15,7 +16,11 @@ export async function GET(): Promise<NextResponse> {
   if (!session) return unauthorized("Sign in to browse the directory.")
 
   await hydrateListings()
-  const profiles = listDirectoryProfiles({ includeAuthenticatedOnly: true })
+  const profiles = listDirectoryProfiles({ includeAuthenticatedOnly: true }).filter((profile) => {
+    const id = typeof profile.id === "string" ? profile.id : ""
+    const challengeId = typeof profile.challenge_id === "string" ? profile.challenge_id : null
+    return listingOnDisplay(challengeId, id !== "" && id === session.profileId)
+  })
 
   return NextResponse.json(
     { version: "v1", generated_at: new Date().toISOString(), profiles },

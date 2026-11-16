@@ -65,8 +65,9 @@ function compareCards(a: OnsiteCard, b: OnsiteCard): number {
 }
 
 /**
- * Cross-kind pairs who are both in the room, ordered by match score.
- * Same-kind matches are kept out of the spotlight queue.
+ * Pairs who are both in the room, ordered by match score.
+ * Same-kind matches stay off the wall. On the mixer that means the spotlight
+ * is a builder beside someone with capital.
  */
 export function rankedPairs(cards: readonly OnsiteCard[], profiles: readonly Profile[]): RankedPair[] {
   const byId = new Map(profiles.map((profile) => [profile.id, profile]))
@@ -75,9 +76,12 @@ export function rankedPairs(cards: readonly OnsiteCard[], profiles: readonly Pro
     for (let j = i + 1; j < cards.length; j += 1) {
       const left = cards[i]!
       const right = cards[j]!
-      if (!isSpotlightPair(left, right)) continue
       const a = byId.get(left.id)
       const b = byId.get(right.id)
+      const mixer = a?.challenge_id === "vision_mixer" && b?.challenge_id === "vision_mixer"
+      // Medicine spotlights are cross-kind. The mixer spotlight is a builder
+      // and someone with capital — two founders still match on the phone.
+      if (mixer ? left.kind === right.kind : !isSpotlightPair(left, right)) continue
       if (!a || !b) continue
       const best = Math.max(score(a, b).score, score(b, a).score)
       if (best < MIN_SCORE) continue

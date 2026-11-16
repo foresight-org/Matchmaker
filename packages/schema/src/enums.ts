@@ -37,7 +37,7 @@ export function hasAiCapabilityKind(kind: Kind): boolean {
  * challenge catalog decides that, so a programme can be built and demoed
  * before it launches.
  */
-export const CHALLENGE_ID = ["recoding_medicine", "ai_safety_berlin"] as const
+export const CHALLENGE_ID = ["recoding_medicine", "ai_safety_berlin", "vision_mixer"] as const
 export const challengeIdEnum = z.enum(CHALLENGE_ID)
 export type ChallengeId = (typeof CHALLENGE_ID)[number]
 export const DEFAULT_CHALLENGE_ID: ChallengeId = "recoding_medicine"
@@ -50,6 +50,9 @@ export const DEFAULT_CHALLENGE_ID: ChallengeId = "recoding_medicine"
 const PROGRAMME_KINDS: Record<ChallengeId, readonly Kind[]> = {
   recoding_medicine: KIND,
   ai_safety_berlin: ["individual"],
+  // Founders stay individuals. Capital is stored as an AI-team row so the
+  // room board can colour the two sides of the mixer without a new kind.
+  vision_mixer: ["individual", "ai_team"],
 }
 
 /** Form / directory kinds for one programme, in display order. */
@@ -147,6 +150,7 @@ const PROGRAMME_LOOKING_FOR: Record<ChallengeId, readonly LookingFor[]> = {
     "not_looking",
     "other",
   ],
+  vision_mixer: ["collaborators", "join_team", "introductions", "not_looking", "other"],
 }
 
 /** Looking-for chips for one programme's form, in display order. */
@@ -184,6 +188,8 @@ export const ATTENDING = [
   "asb_coworking",
   "asb_lunch",
   "asb_talks",
+  // Founder & Funder mixer — one Sunday evening at Vision Weekend USA.
+  "vw_mixer",
   // Shared across programmes.
   "remote_only",
 ] as const
@@ -209,6 +215,7 @@ export function isWebinarOpen(_now = new Date()): boolean {
 const PROGRAMME_ATTENDING: Record<ChallengeId, readonly Attending[]> = {
   recoding_medicine: ["event_sept_1", "event_sept_2", "event_sept_3", "remote_only"],
   ai_safety_berlin: ["asb_coworking", "asb_lunch", "asb_talks", "remote_only"],
+  vision_mixer: ["vw_mixer"],
 }
 
 /** In-person / remote chips for one programme's form. */

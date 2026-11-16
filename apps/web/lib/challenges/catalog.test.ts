@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   acceptsNewListings,
+  listingOnDisplay,
   directoryHref,
   challengeBySlug,
   openChallenges,
@@ -17,13 +18,13 @@ import {
 } from "./visibility"
 
 describe("browseDirectoryPath", () => {
-  it("sends a Recoding Medicine listing to that programme directory", () => {
-    expect(browseDirectoryPath("recoding_medicine")).toBe("/directory?challenge=recoding_medicine")
+  it("sends a closed listing to the programme that is actually open", () => {
+    expect(browseDirectoryPath("recoding_medicine")).toBe("/directory?challenge=vision_mixer")
   })
 
   it("prefers an active desk cookie over the listing programme", () => {
-    expect(browseDirectoryPath("recoding_medicine", null, "ai_safety_berlin")).toBe(
-      "/directory?challenge=ai_safety_berlin",
+    expect(browseDirectoryPath("recoding_medicine", null, "vision_mixer")).toBe(
+      "/directory?challenge=vision_mixer",
     )
   })
 
@@ -32,8 +33,8 @@ describe("browseDirectoryPath", () => {
     if (visible.length === 1) {
       expect(browseDirectoryPath(null)).toBe(directoryHref(visible[0]!.id))
     } else {
-      // With multiple visible programmes and no listing → chooser
-      expect(browseDirectoryPath(null)).toBe("/directory")
+      // No listing yet: land on the programme that is open.
+      expect(browseDirectoryPath(null)).toBe("/directory?challenge=vision_mixer")
     }
   })
 })
@@ -57,17 +58,22 @@ describe("visibility", () => {
     expect(challengeById("recoding_medicine").status).toBe("closed")
   })
 
-  it("AI Safety Berlin is visible in dev (NODE_ENV !== production)", () => {
-    // In test env (not production), preview programmes are on by default
-    expect(isChallengeVisible("ai_safety_berlin")).toBe(true)
+  it("keeps a closed programme's listings off the directory", () => {
+    expect(listingOnDisplay("recoding_medicine")).toBe(false)
+    expect(listingOnDisplay("recoding_medicine", true)).toBe(true)
+    expect(listingOnDisplay("vision_mixer")).toBe(true)
   })
 
-  it("solo demo unlock hides Recoding Medicine for that browser", () => {
-    // In test/dev, previews are on — unlock may focus a pitch desk.
+  it("keeps AI Safety Berlin off the desk entirely", () => {
+    expect(isChallengeVisible("ai_safety_berlin")).toBe(false)
+    expect(visibleChallenges().map((c) => c.id)).toEqual(["recoding_medicine", "vision_mixer"])
+  })
+
+  it("ignores a demo cookie for an unlisted programme", () => {
     const unlock = { programme: "ai_safety_berlin" as const, solo: true }
-    expect(isChallengeVisible("ai_safety_berlin", unlock)).toBe(true)
-    expect(isChallengeVisible("recoding_medicine", unlock)).toBe(false)
-    expect(visibleChallenges(unlock).map((c) => c.id)).toEqual(["ai_safety_berlin"])
+    expect(isChallengeVisible("ai_safety_berlin", unlock)).toBe(false)
+    expect(isChallengeVisible("recoding_medicine", unlock)).toBe(true)
+    expect(isChallengeVisible("vision_mixer", unlock)).toBe(true)
   })
 
   it("ignores unlock cookies when preview programmes are off", () => {
@@ -78,7 +84,10 @@ describe("visibility", () => {
       // Live desk: closed archive stays; preview programme stays hidden.
       expect(isChallengeVisible("recoding_medicine", unlock)).toBe(true)
       expect(isChallengeVisible("ai_safety_berlin", unlock)).toBe(false)
-      expect(visibleChallenges(unlock).map((c) => c.id)).toEqual(["recoding_medicine"])
+      expect(visibleChallenges(unlock).map((c) => c.id)).toEqual([
+        "recoding_medicine",
+        "vision_mixer",
+      ])
       expect(acceptsNewListings("recoding_medicine")).toBe(false)
     } finally {
       if (previous === undefined) delete process.env.NEXT_PUBLIC_PREVIEW_PROGRAMMES
@@ -90,12 +99,13 @@ describe("visibility", () => {
 describe("acceptsNewListings", () => {
   it("blocks Recoding Medicine after close", () => {
     expect(acceptsNewListings("recoding_medicine")).toBe(false)
-    expect(openChallenges()).toEqual([])
+    expect(openChallenges().map((c) => c.id)).toEqual(["vision_mixer"])
   })
 
-  it("does not offer closed programmes on register", () => {
-    expect(registerableChallengeIdOf("recoding_medicine")).toBeNull()
-    expect(registerableChallengeIds()).toEqual([])
+  it("offers the live mixer, and not a closed archive, on register", () => {
+    expect(registerableChallengeIdOf("recoding_medicine")).toBe("vision_mixer")
+    expect(registerableChallengeIdOf("vision_mixer")).toBe("vision_mixer")
+    expect(registerableChallengeIds()).toEqual(["vision_mixer"])
   })
 
   it("offers a preview programme when it is visible and open", () => {
@@ -112,5 +122,6 @@ describe("programmeAutoNudge", () => {
 
   it("mails AI Safety Berlin and any later programme that does not opt out", () => {
     expect(programmeAutoNudge("ai_safety_berlin")).toBe(true)
+    expect(programmeAutoNudge("vision_mixer")).toBe(false)
   })
 })

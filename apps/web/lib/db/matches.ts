@@ -1,4 +1,4 @@
-import { eq, or } from "drizzle-orm"
+import { and, eq, like, or } from "drizzle-orm"
 import { topMatches, type MatchEntry } from "@rmm/matching"
 import type { Profile } from "@rmm/schema"
 import { getDb } from "./client"
@@ -125,6 +125,17 @@ function profileIds(): string[] {
  * question as "has the scorer seen it" — reading the former as a gap made
  * every call rebuild.
  */
+function mixerCacheStale(subjectId: string): boolean {
+  const row = getDb()
+    .select({ factors: matches.factors })
+    .from(matches)
+    .where(and(eq(matches.subjectId, subjectId), like(matches.factors, "%mixer_role_fit%")))
+    .limit(1)
+    .get()
+  if (!row) return false
+  return !row.factors.includes("mixer_portfolio_gate")
+}
+
 function isScored(profileId: string): boolean {
   const row = getDb()
     .select({ id: matches.subjectId })
@@ -139,7 +150,10 @@ function isScored(profileId: string): boolean {
 export function getShortlist(subjectId: string): CachedMatch[] {
   // Filled on read rather than on hydrate: scoring the whole corpus for every
   // profile on every page load is what put a wait behind each header click.
-  if (profileIds().length > 1 && !isScored(subjectId)) {
+  // A cheque used to score on role alone. Rows from before the portfolio
+  // gate lack mixer_portfolio_fit, so the first read after this ships
+  // rebuilds that one shortlist and then leaves it cached.
+  if ((profileIds().length > 1 && !isScored(subjectId)) || mixerCacheStale(subjectId)) {
     recomputeMatchesFor(subjectId)
   }
 

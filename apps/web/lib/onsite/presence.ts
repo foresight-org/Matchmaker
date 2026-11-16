@@ -1,6 +1,8 @@
+import { mixerCardKind, mixerDisplayTrack, mixerRole } from "@rmm/matching"
 import type { Profile } from "@rmm/schema"
 import type { EventRow } from "@/lib/db/events"
 import type { OnsiteCitySlug } from "./cities"
+import { mixerDetail } from "./mixer-detail"
 import type { OnsiteCard } from "./types"
 
 /**
@@ -44,14 +46,29 @@ export function boardName(profile: Profile): string {
 }
 
 export function cardFromProfile(profile: Profile, arrivedAt: string, t: (key: string) => string): OnsiteCard {
+  const mixer = profile.challenge_id === "vision_mixer"
+  const role = mixer ? mixerRole(profile.contact_role ?? "") : null
+  const thesis = `${profile.one_liner} ${profile.summary} ${profile.contact_role ?? ""} ${profile.website ?? ""}`
   return {
     id: profile.id,
     slug: profile.slug,
-    org_name: boardName(profile),
-    kind: profile.kind,
-    kind_label: t(`enum.kind.${profile.kind}`),
+    // Mixer cards keep the person. A firm, when we can name one, sits underneath.
+    org_name: mixer ? profile.org_name : boardName(profile),
+    kind: mixer ? mixerCardKind(profile.contact_role ?? "") : profile.kind,
+    kind_label: role ? t(`enum.mixer_role.${role}`) : t(`enum.kind.${profile.kind}`),
+    track: mixer ? mixerDisplayTrack(thesis) : undefined,
+    capital: mixer ? role === "funder" || role === "both" : undefined,
+    detail: mixer
+      ? mixerDetail({
+          org_name: profile.org_name,
+          one_liner: profile.one_liner,
+          website: profile.website,
+          affiliation: profile.kind === "individual" ? profile.affiliation : undefined,
+        })
+      : undefined,
     one_liner: profile.one_liner,
-    looking_for: lookingForLabels(profile, t),
+    // The Luma form did not ask a reliable “looking for”. Leave it off the board.
+    looking_for: mixer ? [] : lookingForLabels(profile, t),
     arrived_at: arrivedAt,
   }
 }

@@ -65,6 +65,8 @@ export interface DirectoryProfile {
   kind: Kind
   /** Absent on listings created before programmes were first-class. */
   challenge_id?: ChallengeId
+  /** Mixer only. Read from the private registration answer, never the raw string. */
+  mixer_role?: "founder" | "funder" | "both" | "guest"
   org_name: string
   org_type: OrgType
   country: string

@@ -101,22 +101,24 @@ export default async function ChallengePage({
 
       <p className="mt-5 max-w-xl text-ink-soft">{t(`challenge.${id}.intro`)}</p>
 
-      {isApplicationChallenge(id) ? (
+      {isApplicationChallenge(id) && acceptsNewListings(id) ? (
         <DirectoryDisclaimer
           className="mt-6"
-          applyHref={acceptsNewListings(id) ? challenge.hostUrl : undefined}
-          applyNote={acceptsNewListings(id) ? t(`challenge.${id}.host_note`) : undefined}
-          applyLabel={acceptsNewListings(id) ? t(`challenge.${id}.host_link`) : undefined}
+          applyHref={challenge.hostUrl}
+          applyNote={t(`challenge.${id}.host_note`)}
+          applyLabel={t(`challenge.${id}.host_link`)}
         />
       ) : null}
 
       <div className="mt-8 flex flex-wrap gap-3">
-        <Link
-          href={`/directory?challenge=${challenge.id}`}
-          className="inline-flex min-h-12 items-center border border-ink bg-mark px-6 text-base font-semibold uppercase tracking-wide text-mark-ink hover:bg-ink hover:text-paper"
-        >
-          {t("challenge.cta_directory")}
-        </Link>
+        {acceptsNewListings(id) ? (
+          <Link
+            href={`/directory?challenge=${challenge.id}`}
+            className="inline-flex min-h-12 items-center border border-ink bg-mark px-6 text-base font-semibold uppercase tracking-wide text-mark-ink hover:bg-ink hover:text-paper"
+          >
+            {t("challenge.cta_directory")}
+          </Link>
+        ) : null}
         {live ? (
           <Link
             href="/me"
@@ -144,17 +146,23 @@ export default async function ChallengePage({
         ) : null}
       </div>
 
-      <div className="mt-12">
-        <ListingCounts
-          counts={counts}
-          t={t}
-          captionKey={`challenge.${id}.counts_caption`}
-          layout={isApplicationChallenge(id) ? "kinds" : "people"}
-        />
-      </div>
+      {acceptsNewListings(id) ? (
+        <div className="mt-12">
+          <ListingCounts
+            counts={counts}
+            t={t}
+            captionKey={`challenge.${id}.counts_caption`}
+            layout={isApplicationChallenge(id) ? "kinds" : "people"}
+          />
+        </div>
+      ) : null}
 
-      <FactsSection facts={facts} t={t} />
-      <SessionsSection challenge={challenge} t={t} />
+      {challenge.status === "closed" ? null : (
+        <>
+          <FactsSection facts={facts} t={t} />
+          <SessionsSection challenge={challenge} t={t} />
+        </>
+      )}
     </div>
   )
 }

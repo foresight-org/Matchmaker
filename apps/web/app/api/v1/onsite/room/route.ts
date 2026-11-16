@@ -5,7 +5,7 @@ import { getSession } from "@/lib/auth/session"
 import { hydrateEvents, hydrateListings } from "@/lib/db/durable"
 import { listEvents } from "@/lib/db/events"
 import { getShortlist } from "@/lib/db/matches"
-import { listProfiles } from "@/lib/db/profiles"
+import { getProfilesByEmail, listProfiles } from "@/lib/db/profiles"
 import { isOnsiteCitySlug, liveFeedCity } from "@/lib/onsite/cities"
 import { getT } from "@/lib/i18n/server"
 import { buildOnsiteRoom } from "@/lib/onsite/room"
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   const { t } = await getT()
   // Listings keep the standard debounce; events refresh faster so a new
   // arrival reaches every isolate without re-pulling the whole corpus.
-  await Promise.all([hydrateListings(), hydrateEvents({ maxStaleMs: 30_000 })])
+  await Promise.all([hydrateListings({ maxStaleMs: 20_000 }), hydrateEvents({ maxStaleMs: 15_000 })])
 
   // Resolve against the warm cache first. `resolveLiveSession` reads the
   // durable email pointer on every call, and a room full of phones polling
@@ -46,6 +46,10 @@ export async function GET(req: NextRequest): Promise<Response> {
     const live = await resolveLiveSession()
     if (!live) return unauthorized()
     profile = live.profile
+  }
+  if (city === "berkeley") {
+    const mixer = getProfilesByEmail(session.email).find((row) => row.challenge_id === "vision_mixer")
+    if (mixer) profile = mixer
   }
 
   return ok(

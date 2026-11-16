@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useT } from "@/lib/i18n/client"
 import type { OnsiteCitySlug } from "@/lib/onsite/cities"
-import type { OnsiteRoom } from "@/lib/onsite/types"
+import { bySurname } from "@/lib/onsite/roster-page"
+import type { OnsiteCard, OnsiteRoom } from "@/lib/onsite/types"
 import { RoomPersonCard, type RoomCardLabels } from "./room-person-card"
 
 /**
@@ -18,6 +19,10 @@ const POLL_MS = 15_000
 
 type Tab = "matches" | "everyone"
 
+function personText(person: OnsiteCard): string {
+  return `${person.org_name} ${person.one_liner} ${person.detail ?? ""}`.toLowerCase()
+}
+
 function tabClassName(active: boolean): string {
   return [
     "min-h-12 flex-1 border-2 px-3 text-xs font-semibold uppercase tracking-[0.12em]",
@@ -30,6 +35,8 @@ export function HereRoomBoard({ city }: { city: OnsiteCitySlug }) {
   const [room, setRoom] = useState<OnsiteRoom | null>(null)
   const [failed, setFailed] = useState(false)
   const [tab, setTab] = useState<Tab>("matches")
+  const [query, setQuery] = useState("")
+  const mixer = city === "berkeley"
 
   // The first payload decides which tab opens: pointing someone at an empty
   // shortlist when the room is full would be the wrong first impression.
@@ -88,11 +95,19 @@ export function HereRoomBoard({ city }: { city: OnsiteCitySlug }) {
     )
   }
 
-  const people = tab === "matches" ? room.matches : room.everyone
-  const empty = tab === "matches" ? t("onsite.room.matches_empty") : t("onsite.room.everyone_empty")
+  const needle = query.trim().toLowerCase()
+  const listed = tab === "matches" ? room.matches : mixer ? [...room.everyone].sort(bySurname) : room.everyone
+  const people = needle
+    ? listed.filter((person) => personText(person).includes(needle))
+    : listed
+  const empty = needle
+    ? t("onsite.room.find_empty")
+    : tab === "matches"
+      ? t("onsite.room.matches_empty")
+      : t("onsite.room.everyone_empty")
 
   return (
-    <section className="mt-10 border-t border-rule pt-6">
+    <section className={`${mixer ? "mt-6" : "mt-10"} border-t border-rule pt-6`}>
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="font-listing text-2xl uppercase leading-none tracking-tight">
           {t("onsite.room.title")}
@@ -123,12 +138,24 @@ export function HereRoomBoard({ city }: { city: OnsiteCitySlug }) {
         </button>
       </div>
 
+      <label className="mt-3 block">
+        <span className="sr-only">{t("onsite.room.find")}</span>
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={t("onsite.room.find")}
+          autoComplete="off"
+          enterKeyHint="search"
+          className="min-h-12 w-full border-2 border-ink bg-paper px-3 text-base text-ink outline-none placeholder:text-ink-faint focus:bg-paper-shade"
+        />
+      </label>
+
       {people.length === 0 ? (
         <p className="mt-6 text-sm leading-relaxed text-ink-soft">{empty}</p>
       ) : (
         <ul className="mt-4 flex flex-col gap-3">
           {people.map((person) => (
-            <RoomPersonCard key={person.id} person={person} labels={labels} />
+            <RoomPersonCard key={person.id} person={person} labels={labels} mixer={mixer} />
           ))}
         </ul>
       )}

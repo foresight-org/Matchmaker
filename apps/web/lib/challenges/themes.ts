@@ -43,6 +43,13 @@ const CHALLENGE_THEMES: Partial<Record<ChallengeId, Partial<ChallengeTheme>>> = 
     rule: "#b0bbcc",
     accent: "#3d5a80",
   },
+  // Evening paper — the Sunday mixer, warmer than the health challenge.
+  vision_mixer: {
+    paper: "#f3ebe3",
+    paperShade: "#e7d9cc",
+    rule: "#d2c0b0",
+    accent: "#8a4b32",
+  },
 }
 
 export function challengeTheme(id: ChallengeId): ChallengeTheme {

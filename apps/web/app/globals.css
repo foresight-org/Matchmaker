@@ -29,6 +29,18 @@
   --color-mint: #c8ead1;
   --color-brown: #8f7354;
 
+  /*
+   * The six foresight.org hues, dusted toward the paper so a wall of
+   * them reads as a room and not a bag of candy. Still distinct at
+   * the back of the hall.
+   */
+  --color-track-ai: #d9cfe3;
+  --color-track-neuro: #e6d4d2;
+  --color-track-biotech: #c9e0de;
+  --color-track-nano: #dde8cf;
+  --color-track-space: #cddfeb;
+  --color-track-hope: #d8d9e6;
+
   /* Room-board washes. One step off paper: enough to group the four kinds
    * from the back of the room, not enough to become a second palette. */
   --color-tint-teal: #d9ecea;

@@ -70,13 +70,15 @@ export function previewsActive(): boolean {
  */
 function effectiveUnlock(unlock: DemoUnlock | null): DemoUnlock | null {
   if (!unlock) return null
+  const programme = CHALLENGES.find((c) => c.id === unlock.programme)
+  if (!programme || programme.listed === false) return null
   if (!previewEnabled(unlock.programme)) return null
   return unlock
 }
 
 export function isChallengeVisible(id: ChallengeId, unlock: DemoUnlock | null = null): boolean {
   const challenge = CHALLENGES.find((c) => c.id === id)
-  if (!challenge) return false
+  if (!challenge || challenge.listed === false) return false
 
   const active = effectiveUnlock(unlock)
 
@@ -159,6 +161,9 @@ export function browseDirectoryPath(
   const listed = listingChallengeId
     ? visible.find((c) => c.id === listingChallengeId)
     : undefined
+  if (listed && acceptsNewListings(listed.id)) return directoryHref(listed.id)
+  const open = visible.find((c) => acceptsNewListings(c.id))
+  if (open) return directoryHref(open.id)
   if (listed) return directoryHref(listed.id)
   if (visible.length === 1) return directoryHref(visible[0]!.id)
   return "/directory"

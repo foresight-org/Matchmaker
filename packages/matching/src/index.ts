@@ -1,4 +1,6 @@
 export { score, topMatches } from "./score"
+export { isVisionMixer, mixerCardKind, mixerDisplayTrack, mixerFocuses, mixerRole, scoreMixer } from "./mixer"
+export type { MixerRole, MixerTrack } from "./mixer"
 export { computeBlockers, computePeopleBlockers, hasHardBlocker } from "./blockers"
 export { computeFactors, computePeopleFactors, sumFactors } from "./factors"
 export { orientPairing, orientPeoplePairing } from "./pairing"

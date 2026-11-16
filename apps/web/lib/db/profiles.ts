@@ -1,3 +1,4 @@
+import { mixerRole } from "@rmm/matching"
 import { eq, or } from "drizzle-orm"
 import { randomUUID } from "node:crypto"
 import {
@@ -106,7 +107,13 @@ export function listDirectoryProfiles(
       if (p.visibility === "authenticated_only") return opts.includeAuthenticatedOnly === true
       return false
     })
-    .map(toPublicProfile)
+    .map((profile) => {
+      const pub = toPublicProfile(profile)
+      if ((profile.challenge_id ?? "") === "vision_mixer") {
+        pub.mixer_role = mixerRole(profile.contact_role ?? "")
+      }
+      return pub
+    })
 }
 
 /** Strictly listed profiles — the members-only `/directory.json` contract. */

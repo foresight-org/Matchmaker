@@ -23,6 +23,6 @@ export async function GET(req: NextRequest): Promise<Response> {
   // Hobby-friendly: listings stay on the normal 60s debounce (heavy pull).
   // Events refresh at most about twice a minute so a check-in reaches every
   // isolate without re-downloading the whole corpus on each 8s poll.
-  await Promise.all([hydrateListings(), hydrateEvents({ maxStaleMs: 30_000 })])
+  await Promise.all([hydrateListings({ maxStaleMs: 20_000 }), hydrateEvents({ maxStaleMs: 15_000 })])
   return ok(buildOnsiteFeed(city, listProfiles(), listEvents(), t))
 }

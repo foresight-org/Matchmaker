@@ -38,7 +38,23 @@ export const contactClickSchema = z.object({
 })
 
 export const onsiteCheckInSchema = z.object({
-  city: z.enum(["berlin", "paris", "stockholm"]),
+  city: z.enum(["berlin", "paris", "stockholm", "berkeley"]),
+})
+
+/** Walk-up card for someone at the mixer who is not already on the guest list. */
+export const mixerJoinSchema = z.object({
+  name: z.string().trim().min(1).max(80),
+  role: z.enum(["founder", "funder", "both", "guest"]),
+  line: z.string().trim().min(1).max(140),
+  website: z.string().trim().max(200).optional(),
+})
+
+/** The signed-in person editing the card the room sees. */
+export const mixerCardSchema = z.object({
+  name: z.string().trim().min(1).max(80).optional(),
+  role: z.enum(["founder", "funder", "both", "guest"]).optional(),
+  line: z.string().trim().min(1).max(140).optional(),
+  hidden: z.boolean().optional(),
 })
 
 export const introResponseSchema = z.object({

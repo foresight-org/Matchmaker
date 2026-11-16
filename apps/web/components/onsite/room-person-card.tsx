@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { KIND_SKIN } from "@/lib/onsite/kind-skin"
+import { boardSurface, roleInk } from "@/lib/onsite/track-skin"
 import type { OnsiteCard, OnsiteRoomMatch } from "@/lib/onsite/types"
 
 /**
@@ -31,21 +31,31 @@ export interface RoomCardLabels {
   score: (score: number) => string
 }
 
-export function RoomPersonCard({ person, labels }: { person: Person; labels: RoomCardLabels }) {
-  const seeking = joinLabels(person.looking_for)
-  const reasons = isMatch(person) ? joinLabels(person.reasons) : null
+export function RoomPersonCard({
+  person,
+  labels,
+  mixer = false,
+}: {
+  person: Person
+  labels: RoomCardLabels
+  /** Mixer cards lead with the person and the project. The score stays off the card. */
+  mixer?: boolean
+}) {
+  const seeking = mixer ? null : joinLabels(person.looking_for)
+  const reasons = !mixer && isMatch(person) ? joinLabels(person.reasons) : null
+  const about = person.one_liner || person.detail
 
   return (
     <li>
       <Link
         href={`/profile/${person.slug}`}
-        className={`block border-2 border-ink ${KIND_SKIN[person.kind]} border-l-8 px-4 py-3 active:translate-y-px`}
+        className={`block border-2 ${boardSurface(person)} ${person.capital === undefined ? "border-l-8 border-ink" : ""} px-4 py-3 active:translate-y-px`}
       >
         <div className="flex items-start justify-between gap-3">
-          <p className="text-[10px] font-semibold uppercase leading-tight tracking-[0.14em] text-teal-deep">
-            {person.kind_label}
+          <p className="truncate text-[10px] font-semibold uppercase leading-tight tracking-[0.14em]">
+            <span className={roleInk(person.capital)}>{person.kind_label}</span>
           </p>
-          {isMatch(person) ? (
+          {!mixer && isMatch(person) ? (
             <p className="tnum shrink-0 font-listing text-2xl leading-none">
               <span aria-hidden="true">{person.score}</span>
               <span className="sr-only">{labels.score(person.score)}</span>
@@ -57,9 +67,9 @@ export function RoomPersonCard({ person, labels }: { person: Person; labels: Roo
           {person.org_name}
         </p>
 
-        {person.one_liner ? (
-          <p className="mt-2 break-words text-sm leading-snug text-ink-soft [overflow-wrap:anywhere]">
-            {person.one_liner}
+        {about ? (
+          <p className={`mt-2 break-words text-sm leading-snug text-ink-soft [overflow-wrap:anywhere] ${mixer ? "line-clamp-3" : ""}`}>
+            {about}
           </p>
         ) : null}
 

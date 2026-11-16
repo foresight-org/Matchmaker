@@ -3,18 +3,26 @@
 import { useLayoutEffect, useRef } from "react"
 
 /**
- * Shrinks display type until the full name fits its cell — no ellipsis.
+ * Shrinks display type until the name fits its cell.
+ * Wrapped posters keep the whole name. A packed wall uses one line and
+ * an ellipsis once the type cannot go smaller without becoming a blur.
  * ResizeObserver keeps kiosk tiles honest when the grid reflows.
  */
 export function FittedName({
   name,
   minPx = 7,
   maxPx = 16,
+  lines = "wrap",
+  fill = true,
   className = "",
 }: {
   name: string
   minPx?: number
   maxPx?: number
+  /** `single` keeps a packed wall readable: one line, then an ellipsis. */
+  lines?: "wrap" | "single"
+  /** False when the name should sit at its type size and leave the rest of the card to the project. */
+  fill?: boolean
   className?: string
 }) {
   const boxRef = useRef<HTMLDivElement>(null)
@@ -28,8 +36,12 @@ export function FittedName({
     function fit() {
       let size = maxPx
       text!.style.fontSize = `${size}px`
-      // Walk down in quarter-pixel steps until the whole name fits.
-      while (size > minPx && (text!.scrollHeight > box!.clientHeight + 0.5 || text!.scrollWidth > box!.clientWidth + 0.5)) {
+      const overflows = () =>
+        lines === "single"
+          ? text!.scrollWidth > box!.clientWidth + 0.5
+          : text!.scrollHeight > box!.clientHeight + 0.5 || text!.scrollWidth > box!.clientWidth + 0.5
+      // Walk down in quarter-pixel steps until the name fits the cell.
+      while (size > minPx && overflows()) {
         size -= 0.25
         text!.style.fontSize = `${size}px`
       }
@@ -39,13 +51,18 @@ export function FittedName({
     const observer = new ResizeObserver(fit)
     observer.observe(box)
     return () => observer.disconnect()
-  }, [name, minPx, maxPx])
+  }, [name, minPx, maxPx, lines])
+
+  const shape =
+    lines === "single"
+      ? "truncate whitespace-nowrap"
+      : "hyphens-none text-balance"
 
   return (
-    <div ref={boxRef} className="h-full min-h-0 overflow-hidden">
+    <div ref={boxRef} className={fill ? "h-full min-h-0 overflow-hidden" : "overflow-hidden"}>
       <h3
         ref={textRef}
-        className={`break-words font-listing uppercase leading-[1.05] tracking-tight hyphens-auto text-pretty [overflow-wrap:anywhere] ${className}`}
+        className={`font-listing uppercase leading-[1.05] tracking-tight ${shape} ${className}`}
       >
         {name}
       </h3>

@@ -3,6 +3,7 @@ import { listDirectoryProfiles } from "@/lib/db/profiles"
 import { hydrateListings } from "@/lib/db/durable"
 import { getSession } from "@/lib/auth/session"
 import { unauthorized } from "@/lib/api/respond"
+import { listingOnDisplay } from "@/lib/challenges/catalog"
 
 /**
  * GET /api/v1/directory.json — members-only machine-readable listings.
@@ -20,7 +21,11 @@ export async function GET(): Promise<NextResponse> {
     {
       version: "v1",
       generated_at: new Date().toISOString(),
-      profiles: listDirectoryProfiles({ includeAuthenticatedOnly: true }),
+      profiles: listDirectoryProfiles({ includeAuthenticatedOnly: true }).filter((profile) => {
+        const id = typeof profile.id === "string" ? profile.id : ""
+        const challengeId = typeof profile.challenge_id === "string" ? profile.challenge_id : null
+        return listingOnDisplay(challengeId, id !== "" && id === session.profileId)
+      }),
     },
     { headers: { "Cache-Control": "private, no-store" } },
   )

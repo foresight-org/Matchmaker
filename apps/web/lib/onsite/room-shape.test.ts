@@ -22,4 +22,9 @@ describe("roomShape", () => {
     expect(roomShape(6)).toEqual({ cols: 3, rows: 2 })
     expect(roomShape(12)).toEqual({ cols: 4, rows: 3 })
   })
+
+  it("keeps a full mixer wall at eight columns so a surname stays a word", () => {
+    expect(roomShape(114)).toEqual({ cols: 8, rows: 15 })
+    expect(roomShape(80).cols).toBe(8)
+  })
 })

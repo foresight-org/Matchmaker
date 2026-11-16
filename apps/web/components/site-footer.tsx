@@ -4,13 +4,13 @@ import { contactEmail } from "@/lib/contact"
 import { BugReportMailto } from "./bug-report"
 import { Nanowheel } from "./nanowheel"
 import { PartnerLogos } from "./partner-logos"
-import { PLATFORM } from "@/lib/challenges/catalog"
+import { byDesk, PLATFORM } from "@/lib/challenges/catalog"
 import { requestDemoUnlock, visibleChallenges } from "@/lib/challenges/visibility"
 
 /** Site colophon: Foresight operates the platform. */
 export async function SiteFooter() {
   const { t } = await getT()
-  const programmes = visibleChallenges(await requestDemoUnlock())
+  const programmes = [...visibleChallenges(await requestDemoUnlock())].sort(byDesk)
   const inbox = contactEmail()
 
   return (
