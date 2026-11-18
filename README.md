@@ -1,6 +1,6 @@
 # Foresight Matchmaking
 
-A Foresight Institute directory that pairs organisations around open programmes. **Recoding Medicine** (application deadline **16 October 2026**) is the first programme on this instance.
+A Foresight Institute directory that pairs organisations around open programmes.
 
 Think of it as a phone book, not a social network: add a structured **listing** against a programme, browse the directory, get a deterministic ranked shortlist of counterparts, and **email an introduction**. Both contacts are on the thread so the conversation continues off this platform. Joint applications are filed with the programme host, not here.
 
